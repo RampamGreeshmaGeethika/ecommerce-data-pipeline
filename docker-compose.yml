@@ -1,0 +1,83 @@
+x-airflow-common:
+  &airflow-common
+  build:
+    context: .
+    dockerfile: Dockerfile.airflow
+  environment:
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__WEBSERVER__SECRET_KEY: airflow-secret
+    JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+    SPARK_LOCAL_IP: 127.0.0.1
+    PIPELINE_ENV: ${PIPELINE_ENV:-dev}
+    PIPELINE_STORAGE_MODE: ${PIPELINE_STORAGE_MODE:-local}
+    PIPELINE_SCALE_FACTOR: ${PIPELINE_SCALE_FACTOR:-12}
+    PIPELINE_RAW_SOURCE_PATH: ${PIPELINE_RAW_SOURCE_PATH:-/opt/airflow/data/raw/ecommerce_sales.csv}
+    PIPELINE_OUTPUT_ROOT: ${PIPELINE_OUTPUT_ROOT:-/opt/airflow/data/processed}
+    PIPELINE_S3_BUCKET: ${PIPELINE_S3_BUCKET:-}
+    PIPELINE_S3_PREFIX: ${PIPELINE_S3_PREFIX:-ecommerce-analytics}
+    PIPELINE_AWS_REGION: ${PIPELINE_AWS_REGION:-us-east-1}
+    PIPELINE_POSTGRES_HOST: ${PIPELINE_POSTGRES_HOST:-postgres}
+    PIPELINE_POSTGRES_PORT: ${PIPELINE_POSTGRES_PORT:-5432}
+    PIPELINE_POSTGRES_DB: ${PIPELINE_POSTGRES_DB:-analytics}
+    PIPELINE_POSTGRES_USER: ${PIPELINE_POSTGRES_USER:-airflow}
+    PIPELINE_POSTGRES_PASSWORD: ${PIPELINE_POSTGRES_PASSWORD:-airflow}
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./jobs:/opt/airflow/jobs
+    - ./pipeline:/opt/airflow/pipeline
+    - ./data:/opt/airflow/data
+    - ./sql:/opt/airflow/sql
+    - ./logs:/opt/airflow/logs
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate && \
+        airflow users create \
+          --username airflow \
+          --firstname Airflow \
+          --lastname Admin \
+          --role Admin \
+          --email admin@example.com \
+          --password airflow
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    restart: unless-stopped
+
+volumes:
+  postgres-db-volume:

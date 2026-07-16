@@ -1,7 +1,7 @@
 import os
 import csv
 import psycopg2
-from config import *
+from scripts.config import DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROCESSED = os.path.join(BASE, "data", "processed")

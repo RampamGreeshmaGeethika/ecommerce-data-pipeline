@@ -1,60 +1,47 @@
--- Top categories
-SELECT category, SUM(sales) AS total_sales
-FROM sales
+-- Monthly revenue trend
+SELECT
+    order_year,
+    order_month,
+    gross_sales,
+    avg_order_value
+FROM gold.agg_monthly_sales
+ORDER BY order_year, order_month;
+
+-- Top performing categories
+SELECT
+    category,
+    SUM(sales) AS total_sales,
+    SUM(quantity) AS units_sold
+FROM gold.fct_orders
 GROUP BY category
-ORDER BY total_sales DESC;
+ORDER BY total_sales DESC
+LIMIT 10;
 
--- Monthly revenue
-SELECT year, month, SUM(sales) AS revenue
-FROM sales
-GROUP BY year, month
-ORDER BY year, month;
+-- Highest revenue states
+SELECT
+    state,
+    gross_sales,
+    order_count
+FROM gold.agg_state_sales
+ORDER BY gross_sales DESC
+LIMIT 10;
 
--- Top cities
-SELECT city, SUM(sales) AS total_sales
-FROM sales
-GROUP BY city
-ORDER BY total_sales DESC;
+-- Cancelled order share
+SELECT
+    is_cancelled,
+    COUNT(*) AS order_count,
+    SUM(sales) AS revenue
+FROM gold.fct_orders
+GROUP BY is_cancelled;
 
--- Fulfilment Type Breakdown
-SELECT fulfilment, SUM(sales) AS total_sales
-FROM sales
-GROUP BY fulfilment
-ORDER BY total_sales DESC;
-
--- Sales Channel Performance
-SELECT sales_channel, SUM(sales) AS total_sales
-FROM sales
-GROUP BY sales_channel
-ORDER BY total_sales DESC;
-
--- B2B vs B2C
-SELECT b2b, SUM(sales) AS total_sales
-FROM sales
-GROUP BY b2b;
-
--- Courier Status Breakdown
-SELECT courier_status, COUNT(*) AS orders
-FROM sales
-GROUP BY courier_status;
-
--- Top SKUs
-SELECT sku, SUM(sales) AS total_sales
-FROM sales
-GROUP BY sku
+-- Best selling SKUs
+SELECT
+    sku,
+    style,
+    category,
+    SUM(quantity) AS units_sold,
+    SUM(sales) AS total_sales
+FROM gold.fct_orders
+GROUP BY sku, style, category
 ORDER BY total_sales DESC
 LIMIT 20;
-
--- Top Styles (product names)
-SELECT style, SUM(sales) AS total_sales
-FROM sales
-GROUP BY style
-ORDER BY total_sales DESC
-LIMIT 20;
-
--- Country Breakdown
-SELECT country, SUM(sales) AS total_sales
-FROM sales
-GROUP BY country
-ORDER BY total_sales DESC;
-

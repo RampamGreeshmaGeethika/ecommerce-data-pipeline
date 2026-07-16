@@ -1,6 +1,5 @@
-pandas
-sqlalchemy
-psycopg2-binary
-boto3
-python-dotenv
-
+pandas>=2.2,<3.0
+boto3>=1.34,<2.0
+python-dotenv>=1.0,<2.0
+pyarrow>=17.0,<18.0
+pyspark>=3.5,<4.0

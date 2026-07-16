@@ -1,0 +1,21 @@
+SELECT
+    order_id,
+    order_date,
+    order_year,
+    order_month,
+    order_day,
+    order_weekday,
+    status,
+    is_cancelled,
+    fulfilment,
+    sales_channel,
+    ship_service_level,
+    sku,
+    category,
+    quantity,
+    price,
+    sales,
+    state,
+    country,
+    b2b
+FROM gold.fct_orders;

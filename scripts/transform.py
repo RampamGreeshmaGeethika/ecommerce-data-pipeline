@@ -9,7 +9,7 @@ INPUT = os.path.join(RAW, "orders_raw.csv")
 OUTPUT = os.path.join(PROCESSED, "orders_processed.csv")
 
 def main():
-    df = pd.read_csv(INPUT)
+    df = pd.read_csv(INPUT, encoding="utf-8-sig", low_memory=False)
 
     df = df.rename(columns={
         "Order ID": "order_id",
@@ -41,7 +41,7 @@ def main():
     df["quantity"] = df["quantity"].fillna(0)
     df["price"] = df["price"].fillna(0)
 
-    df["order_date"] = pd.to_datetime(df["order_date"], errors="coerce")
+    df["order_date"] = pd.to_datetime(df["order_date"], format="%m-%d-%y", errors="coerce")
     df = df.dropna(subset=["order_date"])
 
     df = df[(df["price"] >= 0) & (df["quantity"] >= 0)]
@@ -52,8 +52,10 @@ def main():
     df["month"] = df["order_date"].dt.month
     df["weekday"] = df["order_date"].dt.day_name()
 
+    os.makedirs(PROCESSED, exist_ok=True)
     df.to_csv(OUTPUT, index=False)
     print("Saved:", OUTPUT)
+    print("Processed rows:", len(df))
 
 if __name__ == "__main__":
     main()
